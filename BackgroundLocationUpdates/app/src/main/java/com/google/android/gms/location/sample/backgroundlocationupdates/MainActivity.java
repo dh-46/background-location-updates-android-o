@@ -40,6 +40,8 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
+import java.util.ArrayList;
+
 
 /**
  * The only activity in this sample. Displays UI widgets for requesting and removing location
@@ -60,7 +62,7 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
      * The desired interval for location updates. Inexact. Updates may be more or less frequent.
      */
     // FIXME: 5/16/17
-    private static final long UPDATE_INTERVAL = 10 * 1000;
+    private static final long UPDATE_INTERVAL = 4 * 1000;
 
     /**
      * The fastest rate for active location updates. Updates will never be more frequent
@@ -130,6 +132,7 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
     }
 
     /**
+     * 建立GPS請求
      * Sets up the location request. Android has two location request settings:
      * {@code ACCESS_COARSE_LOCATION} and {@code ACCESS_FINE_LOCATION}. These settings control
      * the accuracy of the current location. This sample uses ACCESS_FINE_LOCATION, as defined in
@@ -143,7 +146,18 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
      * updates.
      */
     private void createLocationRequest() {
+        mLocationRequest = new LocationRequest();
 
+        mLocationRequest.setInterval(UPDATE_INTERVAL);
+
+        // Sets the fastest rate for active location updates. This interval is exact, and your
+        // application will never receive updates faster than this value.
+        mLocationRequest.setFastestInterval(FASTEST_UPDATE_INTERVAL);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+
+        // Sets the maximum time when batched location updates are delivered. Updates may be
+        // delivered sooner than this interval.
+        mLocationRequest.setMaxWaitTime(MAX_WAIT_TIME);
     }
 
     /**
@@ -171,7 +185,14 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
     }
 
     private PendingIntent getPendingIntent() {
-        return null;
+//        Intent intent = new Intent(this, LocationUpdatesIntentService.class);
+//        intent.setAction(LocationUpdatesIntentService.ACTION_PROCESS_UPDATES);
+//        return PendingIntent.getService(this,0,intent,PendingIntent.FLAG_UPDATE_CURRENT);
+
+        // 針對Android O 以上 控管背景service問題 改用BroadcastReceiver
+        Intent intent = new Intent(this, LocationUpdatesBroadcastReceiver.class);
+        intent.setAction(LocationUpdatesBroadcastReceiver.ACTION_PROCESS_UPDATES);
+        return PendingIntent.getBroadcast(this,0,intent,PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
     @Override

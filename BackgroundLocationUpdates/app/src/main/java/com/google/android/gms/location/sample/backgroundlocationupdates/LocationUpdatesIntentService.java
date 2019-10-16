@@ -53,7 +53,25 @@ public class LocationUpdatesIntentService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
+        // 處理接收到的intent
+        if (intent != null) {
+            String action = intent.getAction();
+            if (ACTION_PROCESS_UPDATES.equals(action)) {
+                LocationResult result = LocationResult.extractResult(intent);
+                if (result != null) {
+                    List<Location> locations = result.getLocations();
+                    LocationResultHelper locationResultHelper = new LocationResultHelper(this,locations);
 
+                    // Save the location data to SharedPreferences. => 因為MainActivity有實作OnSPChangedListener => 觸發MainActivity update UI
+                    locationResultHelper.saveResults();
+
+                    // Show notification with the location data. => 當APP不在前景時仍看得到，但是不是persist的通知，可以被滑掉
+                    locationResultHelper.showNotification();
+
+                    Log.i(TAG, LocationResultHelper.getSavedLocationResult(this));
+                }
+            }
+        }
     }
 }
 
